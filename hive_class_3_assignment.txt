@@ -1,22 +1,172 @@
-1. Download vechile sales data -> https://github.com/shashank-mishra219/Hive-Class/blob/main/sales_order_data.csv
+download sales_order_data sheet linl>>>>https://github.com/bashid1025/HIVETXT/edit/main/hive_class_3_assignment.txt
+create table sales_order_data_csv
 
-2. Store raw data into hdfs location
+(
+ORDERNUMBER int,
+QUANTITYORDERED int,
+PRICEEACH float,
+ORDERLINENUMBER int,
+SALES float,
+STATUS string,
+QTR_ID int,
+MONTH_ID int,
+YEAR_ID int,
+PRODUCTLINE string,
+MSRP int,
+PRODUCTCODE string,
+PHONE string,
+CITY string,
+STATE string,
+POSTALCODE string,
+COUNTRY string,
+TERRITORY string,
+CONTACTLASTNAME string,
+CONTACTFIRSTNAME string,
+DEALSIZE string
+)
+row format delimited
+fields terminated by ','
+tblproperties("skip.header.line.count"="1")
+; 
 
-3. Create a internal hive table "sales_order_csv" which will store csv data sales_order_csv .. make sure to skip header row while creating table
+# load sales_order_data.csv data into above mentioned tables
 
-4. Load data from hdfs path into "sales_order_csv" 
+> create table sales_order_data_orc_01
+    > (
+    > ORDERNUMBER int,
+    > QUANTITYORDERED int,
+    > PRICEEACH float,
+    > ORDERLINE int,
+    > SALES float,
+    > STATUS string,
+    > QTR_ID int,
+    > MONTH_ID int,
+    > YEAR_ID int,
+    > PRODUCTLINE string,
+    > MSRP int,
+    > PRODUCTCODE string,
+    > PHONE string,
+    > CITY string,
+    > STATE string,
+    > POSTALCODE string,
+    > COUNTRY string,
+    > TERRITORY string,
+    > CONTACTLASTNAME string,
+    > CONTACTFIRSTNAME string,
+    > DEALSIZE string
+    > )
+    > stored as orc;
+    
+     # copy data from sales_order_data_csv to sales_order_data_orc_01
+     
+     > from sales_order_data_csv insert overwrite table sales_order_data_orc_01 select*;
+      >select * from sales_order_data_orc_01 limit 5;
+     # here output will be for  >
+     
+     
+    10107   30      95.7    2       2871.0  Shipped 1       2       2003    Motorcycles     95      S10_1678        2125557818      NYC     NY      10022   USA     NA     Yu       Kwai    Small
+10121   34      81.35   5       2765.9  Shipped 2       5       2003    Motorcycles     95      S10_1678        26.47.1555      Reims           51100   France  EMEA   Henriot  Paul    Small
+10134   41      94.74   2       3884.34 Shipped 3       7       2003    Motorcycles     95      S10_1678        +33 1 46 62 7555        Paris           75508   France EMEA     Da Cunha        Daniel  Medium
+10145   45      83.26   6       3746.7  Shipped 3       8       2003    Motorcycles     95      S10_1678        6265557265      Pasadena        CA      90003   USA    NA       Young   Julie   Medium
+10159   49      100.0   14      5205.27 Shipped 4       10      2003    Motorcycles     95      S10_1678        6505551386      San Francisco   CA              USA    NA       Brown   Julie   Medium
+ 
+# Calculatye total sales per year for all
+2003    3516979.547241211
+2004    4724162.593383789
+2005    1791486.7086791992
 
-5. Create an internal hive table which will store data in ORC format "sales_order_orc"
+#Find a product for which maximum orders were placed
+>select productline, max(quantityordered) from sales_order_data_orc_01 group by productline;
 
-6. Load data from "sales_order_csv" into "sales_order_orc"
+Classic Cars    97
+Motorcycles     66
+Planes  85
+Ships   55
+Trains  51
+Trucks and Buses        70
+Vintage Cars    76
 
+# Calculate the total sales for each quarter
+ > select month_id, sum(sales) from sales_order_data_orc_01 where month_id in(3,6,9,12) group by month_id;
+ 3       754501.3897094727
+6       454756.78186035156
+9       584724.26953125
+12      634679.1182250977
 
-Perform below menioned queries on "sales_order_orc" table :
+# In which quarter sales was minimum
+> select month_id, min(sales) from sales_order_data_orc_01 where month_id in (3,6,9,12) group by month_id;
+3       710.2
+6       651.8
+9       948.99
+12      728.4
+# In which country sales was maximum and in which country sales was minimum
+> select country, max(sales) ,min(sales) from  sales_order_data_orc_01 group by country;
 
-a. Calculatye total sales per year
-b. Find a product for which maximum orders were placed
-c. Calculate the total sales for each quarter
-d. In which quarter sales was minimum
-e. In which country sales was maximum and in which country sales was minimum
-f. Calculate quartelry sales for each city
-h. Find a month for each year in which maximum number of quantities were sold
+Australia       9774.03 652.35
+Austria 9240.0  640.05
+Belgium 6804.63 881.4
+Canada  9064.89 1119.93
+Denmark 10468.9 1146.5
+Finland 10606.2 891.03
+France  11739.7 482.13
+Germany 8940.96 948.99
+Ireland 8258.0  1056.4
+Italy   9160.36 577.6
+Japan   10758.0 553.95
+Norway  8844.12 1129.04
+Philippines     7483.98 1173.15
+Singapore       10993.5 785.64
+Spain   12001.0 683.8
+Sweden  7209.11 1467.48
+Switzerland     6761.6  1205.04
+UK      11886.6 710.2
+USA     14082.8 541.14
+
+#Calculate quartelry sales for each city
+ >select month_id,city,sales from  sales_order_data_orc_01 where month_id in (3,6,9,12) limit 10;
+
+12      San Francisco   2168.54
+6       Bridgewater     3676.76
+9       Helsinki        2597.39
+12      Chatswood       1451.0
+3       New Bedford     3207.12
+3       Lule    7209.11
+9       Singapore       10993.5
+12      Vancouver       9064.89
+3       Cambridge       6463.23
+6       Minato-ku       7680.64
+
+#Find a month for each year in which maximum number of quantities were sold
+> select year_id,month_id,max(quantityordered) from    sales_order_data_orc_01 group by year_id ,month_id;
+
+2003    1       50
+2003    2       50
+2003    3       50
+2003    4       50
+2003    5       50
+2003    6       50
+2003    7       49
+2003    8       49
+2003    9       50
+2003    10      50
+2003    11      50
+2003    12      49
+2004    1       50
+2004    2       50
+2004    3       50
+2004    4       49
+2004    5       50
+2004    6       50
+2004    7       50
+2004    8       50
+2004    9       50
+2004    10      50
+2004    11      55
+2004    12      50
+2005    1       50
+2005    2       50
+2005    3       50
+2005    4       97
+2005    5       70
+
+                                                                                                    https://github.com/bashid1025/HIVETXT/blob/main/sales_order_data.csv
