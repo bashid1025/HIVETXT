@@ -168,5 +168,3 @@ USA     14082.8 541.14
 2005    3       50
 2005    4       97
 2005    5       70
-
-                                                                                                    https://github.com/bashid1025/HIVETXT/blob/main/sales_order_data.csv
